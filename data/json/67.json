@@ -1,0 +1,55 @@
+[
+ {
+  "children": [
+   {
+    "tag": "h5",
+    "text": "кв.2"
+   }
+  ],
+  "tag": "td"
+ },
+ {
+  "children": [
+   {
+    "tag": "h5",
+    "text": "кв.8"
+   }
+  ],
+  "tag": "td"
+ },
+ {
+  "children": [
+   {
+    "tag": "h5",
+    "text": "кв.1"
+   }
+  ],
+  "tag": "td"
+ },
+ {
+  "children": [
+   {
+    "tag": "h5",
+    "text": "кв.2"
+   }
+  ],
+  "tag": "td"
+ },
+ {
+  "children": [
+   {
+    "tag": "h5",
+    "text": "кв.7"
+   }
+  ],
+  "tag": "td"
+ },
+ {
+  "children": [
+   {
+    "tag": "h5"
+   }
+  ],
+  "tag": "td"
+ }
+]

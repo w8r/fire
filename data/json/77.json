@@ -1,0 +1,29 @@
+[
+ {
+  "children": [
+   {
+    "tag": "h5",
+    "text": "кв.1"
+   }
+  ],
+  "tag": "td"
+ },
+ {
+  "children": [
+   {
+    "tag": "h5",
+    "text": "кв.17"
+   }
+  ],
+  "tag": "td"
+ },
+ {
+  "children": [
+   {
+    "tag": "h5",
+    "text": "кв.5"
+   }
+  ],
+  "tag": "td"
+ }
+]

@@ -1,0 +1,140 @@
+#!/usr/bin/env node
+
+// select * from html where url='mos.memo.ru/shot-53.htm' and xpath='//table//td'
+//
+// , (русский|еврей|поляк|немец|австриец|японец|белорус|латыш|эстонец|венгр|украинец|полька|украинка|русская|немка|еврейка|литовец|китаец|мадьяр|кореец|француз|англичанин|румын|цыган|бурят|осетин|грузин|армянин|ингуш|азербайджанец|индус|итальянец|чех|словак|швед|норвежец|финн|финка|латышка|серб|хорват|датчанин|калмык),
+
+var fs = require('fs');
+var path = require('path');
+
+fs.readFile(path.join(__dirname, '../data/data.csv'), {
+  encoding: 'utf-8'
+}, function(err, contents) {
+
+  contents = contents.split('\n');
+  console.log(contents.length, 'lines');
+
+  var data = contents.filter(function(line) {
+    return line !== '';
+  }).map(function(line) {
+    line = line.split(';');
+    return [
+      line[0],
+      line[1].trim(),
+      line[2].trim(),
+      line[3].trim(),
+      line[4].trim(),
+      line[5].trim(),
+      line[6].trim(),
+      line[7].match(/(\d+)\.(\d+).(\d+)/).slice(1).map(function(n) {
+        return parseInt(n);
+      }),
+      line[8].replace(/\./g, '')
+    ];
+    return {
+      name: line[0],
+      birthdate: line[1].trim(),
+      birthplace: line[2].trim(),
+      nationality: line[3].trim(),
+      party: line[4].trim(),
+      occupation: line[5].trim(),
+      address: line[6].trim(),
+      executed: line[7].match(/(\d+)\.(\d+).(\d+)/).slice(1).map(function(n) {
+        return parseInt(n);
+      }),
+      buried: line[8].replace(/\./g, '')
+    };
+  });
+
+  fs.writeFile(path.join(__dirname, '../data/data.json'), JSON.stringify(data, null, 2), function(err) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("The file was saved!");
+    }
+  });
+});
+
+// fs.readFile(path.join(__dirname, '../data/data.csv'), {
+//   encoding: 'utf-8'
+// }, function(err, contents) {
+//   contents = contents.split('\n');
+//   console.log(contents.length, 'lines');
+
+//   var errors = contents.filter(function(line) {
+//     return (line.split(';').length !== 9 && line.split(';').length !== 1);
+//   });
+
+//   console.log('errors', errors.length);
+
+//   fs.writeFile(path.join(__dirname, '../data/errors.csv'), errors.join('\n\n'), function(err) {
+//     if (err) {
+//       console.log(err);
+//     } else {
+//       console.log("The file was saved!");
+//     }
+//   });
+
+//   fs.writeFile(path.join(__dirname, '../data/data.csv'),
+//     contents.filter(function(line) {
+//       return line.split(';').length === 9;
+//     }).join('\n'),
+//     function(err) {
+//       console.log('data written');
+//     });
+// });
+
+// function person(data) {
+//   var split = data.split(/,|Расстрелян\s|Место\sзахоронения\:\s/);
+//   var name = split[0];
+
+//   console.log(split)
+//   var born = split[1] //.match(/(\d?\d\.)?(\d?\d\.)?\d\d\d\d+/g)[0];
+
+//   return {
+//     name: name,
+//     born: born,
+//     data: data
+//   };
+// };
+
+
+// var rows = [];
+// fs.readdir(path.join(__dirname, '../data/json/'), function(err, files) {
+//   if (err) throw err;
+
+//   files.forEach(function(file, index, arr) {
+//     fs.readFile(path.join(__dirname, '../data/json/' +
+//       file), {
+//       encoding: 'utf-8'
+//     }, function(err, contents) {
+//       var json = JSON.parse(contents);
+//       rows = rows.concat(
+//         json.filter(function(item) {
+//           //console.log(item)
+//           return item.children[0].children;
+//         })
+//         .map(function(item) {
+//           // console.log(
+//           //   person(
+//           //     [item.children[0].children[0].text,
+//           //       item.children[0].text
+//           //     ].join('')
+//           //   ));
+//           return [item.children[0].children[0].text,
+//             item.children[0].text
+//           ].join(';');
+//         }));
+
+//       if (index === arr.length - 1) {
+//         fs.writeFile(path.join(__dirname, '../data/data.txt'), rows.join('\n'), function(err) {
+//           if (err) {
+//             console.log(err);
+//           } else {
+//             console.log("The file was saved!");
+//           }
+//         });
+//       }
+//     });
+//   });
+// });
