@@ -7,5 +7,12 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Alexander Milevski <info@w8r.name>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^1.4.0"
+  },
+  "dependencies": {
+    "jsdom": "^3.0.2",
+    "minimist": "^1.1.0"
+  }
 }

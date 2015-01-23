@@ -2,87 +2,110 @@
 
 // select * from html where url='mos.memo.ru/shot-53.htm' and xpath='//table//td'
 //
-// , (русский|еврей|поляк|немец|австриец|японец|белорус|латыш|эстонец|венгр|украинец|полька|украинка|русская|немка|еврейка|литовец|китаец|мадьяр|кореец|француз|англичанин|румын|цыган|бурят|осетин|грузин|армянин|ингуш|азербайджанец|индус|итальянец|чех|словак|швед|норвежец|финн|финка|латышка|серб|хорват|датчанин|калмык),
+// , (русский|еврей|поляк|немец|австриец|японец|белорус|латыш|эстонец|венгр|украинец|полька|украинка|русская|немка|еврейка|литовец|китаец|мадьяр|кореец|француз|англичанин|румын|цыган|бурят|осетин|грузин|армянин|ингуш|азербайджанец|индус|итальянец|чех|словак|швед|норвежец|финн|финка|латышка|серб|хорват|датчанин|калмык|иранец|ассириец|татарин|кореянка|грек|абхазец|саксонец \(венгр\)|мордвин|китаянка|казах|удмурт|русская \(еврейка\)|македонец|турок|мари|караим|афганец|карел|башкир|черногорец|кумык|якут|литовка|таджик|коми|зырянин|узбек|мордвин|шотландец),
+// ; (б\/п|член ВКП\(б\)(, (бывший )?член ВКП\(б\))?[^,]*|член ВЛКСМ[^,]*|член КП Польши[^,]*|исключен из ВКП\(б\)[^,]*|член КП Германии\, член ВКП\(б\)|искл\. из ВКП\(б\)[^,]*|бывший член ВКП\(б\)[^,]*|кандидат в члены ВКП\(б\)[^,]*|член КП Германии|бывший член Бунда|член КП Австрии|член компартии Польши|член КП Ирана|член КПГ|исключен из кандидатов в члены ВКП\(б\)[^,])[.,]
 
 var fs = require('fs');
 var path = require('path');
+var jsdom = require('jsdom');
 
-fs.readFile(path.join(__dirname, '../data/data.csv'), {
-  encoding: 'utf-8'
-}, function(err, contents) {
+var argv = require('minimist')(process.argv.slice(2));
 
-  contents = contents.split('\n');
-  console.log(contents.length, 'lines');
+if (argv['fix-html']) {
+  parse();
+}
 
-  var data = contents.filter(function(line) {
-    return line !== '';
-  }).map(function(line) {
-    line = line.split(';');
-    return [
-      line[0],
-      line[1].trim(),
-      line[2].trim(),
-      line[3].trim(),
-      line[4].trim(),
-      line[5].trim(),
-      line[6].trim(),
-      line[7].match(/(\d+)\.(\d+).(\d+)/).slice(1).map(function(n) {
-        return parseInt(n);
-      }),
-      line[8].replace(/\./g, '')
-    ];
-    return {
-      name: line[0],
-      birthdate: line[1].trim(),
-      birthplace: line[2].trim(),
-      nationality: line[3].trim(),
-      party: line[4].trim(),
-      occupation: line[5].trim(),
-      address: line[6].trim(),
-      executed: line[7].match(/(\d+)\.(\d+).(\d+)/).slice(1).map(function(n) {
-        return parseInt(n);
-      }),
-      buried: line[8].replace(/\./g, '')
-    };
+function csv2json() {
+  fs.readFile(path.join(__dirname, '../data/data.csv'), {
+    encoding: 'utf-8'
+  }, function(err, contents) {
+
+    contents = contents.split('\n');
+    console.log(contents.length, 'lines');
+
+    var data = contents.filter(function(line) {
+      return line !== '';
+    }).map(function(line) {
+      line = line.split(';');
+      return [
+        line[0],
+        line[1].trim(),
+        line[2].trim(),
+        line[3].trim(),
+        line[4].trim(),
+        line[5].trim(),
+        line[6].trim(),
+        line[7].match(/(\d+)\.(\d+).(\d+)/).slice(1).map(function(n) {
+          return parseInt(n);
+        }),
+        line[8].replace(/\./g, '')
+      ];
+      return {
+        name: line[0],
+        birthdate: line[1].trim(),
+        birthplace: line[2].trim(),
+        nationality: line[3].trim(),
+        party: line[4].trim(),
+        occupation: line[5].trim(),
+        address: line[6].trim(),
+        executed: line[7].match(/(\d+)\.(\d+).(\d+)/).slice(1).map(function(n) {
+          return parseInt(n);
+        }),
+        buried: line[8].replace(/\./g, '')
+      };
+    });
+
+    fs.writeFile(path.join(__dirname, '../data/data.json'), JSON.stringify(data, null, 2), function(err) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("The file was saved!");
+      }
+    });
   });
+}
 
-  fs.writeFile(path.join(__dirname, '../data/data.json'), JSON.stringify(data, null, 2), function(err) {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("The file was saved!");
-    }
+function rows2csv(callback) {
+  fs.readFile(path.join(__dirname, '../data/data.txt'), {
+    encoding: 'utf-8'
+  }, function(err, contents) {
+    contents = contents.split('\n');
+    console.log(contents.length, 'lines');
+
+    var errors = contents.filter(function(line) {
+      return (line.split(';').length !== 9 && line.split(';').length !== 1);
+    });
+
+    console.log('errors', errors.length);
+
+    fs.writeFile(path.join(__dirname, '../data/errors.csv'), errors.join('\n\n'), function(err) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("The file was saved!");
+      }
+    });
+
+    fs.writeFile(path.join(__dirname, '../data/data.csv'),
+      contents.filter(function(line) {
+        return line.split(';').length === 9;
+      }).join('\n'),
+      function(err) {
+        callback(contents.filter(function(line) {
+          return line.split(';').length === 9;
+        }).join('\n'));
+      });
   });
-});
+}
 
-// fs.readFile(path.join(__dirname, '../data/data.csv'), {
-//   encoding: 'utf-8'
-// }, function(err, contents) {
-//   contents = contents.split('\n');
-//   console.log(contents.length, 'lines');
-
-//   var errors = contents.filter(function(line) {
-//     return (line.split(';').length !== 9 && line.split(';').length !== 1);
-//   });
-
-//   console.log('errors', errors.length);
-
-//   fs.writeFile(path.join(__dirname, '../data/errors.csv'), errors.join('\n\n'), function(err) {
-//     if (err) {
-//       console.log(err);
-//     } else {
-//       console.log("The file was saved!");
-//     }
-//   });
-
-//   fs.writeFile(path.join(__dirname, '../data/data.csv'),
-//     contents.filter(function(line) {
-//       return line.split(';').length === 9;
-//     }).join('\n'),
-//     function(err) {
-//       console.log('data written');
-//     });
-// });
+var BORN_RE;
+var NAT_RE =
+  /\,\s(н\/а|русский|(польский\s)?еврей|поляк|немец|карачаевец|австриец|японец|крымский\sтатарин|чуваш|белорус(ка)?|голландец|араб|армянка|австрийка|словенец|швейцарец|молдаванин|даргинец|латыш|эстонец|венгр|венгерка|чешка|караимка|монгол|немец\s\(русский\)|украинец|болгарин|полька|украинка|русская|немка|еврейка|литовец|китаец|мадьяр|кореец|француз|англичанин|румын(ка)?|цыган|бурят|осетин|грузин(ка)?|армянин|ингуш|азербайджанец|индус|итальянец|чех|словак|швед|норвежец|финн|финка|латышка|серб|хорват|датчанин|калмык|иранец|ассириец|татарин|кореянка|грек|абхазец|саксонец\s\(венгр\)|мордвин|китаянка|казах|удмурт|уйгур|латгалец|перс|японка|эстонка|польская\sеврейка|русская\s\(еврейка\)|русский\s\(по\sдругим\sданным\s-\sеврей\)|русский\s\(по\sдругим\sданным\s-\sполяк\)|русский\s\(по\sдругим\sданным\s-\sнемец\)|русский\s\(украинец\)|русский\s\(немец\)|тюрок|немец\s\(латыш\)|белорус\s\(по\sдругим\sданным\s-\sполяк\)|мариец|ойрат|горский\sеврей|македонец|турок|мари|караим|афганец|карел|башкир(ка)?|татарка|шведка|черногорец|кумык|якут|литовка|таджик|коми|зырянин|узбек|мордвин|латыш\s\(немец\)|шотландец)\,/g;
+var PARTY_RE =
+  /;\s(б\/п|член\sВКП\(б\)(,\s(бывший\s)?член\sВКП\(б\))?[^,;]*|член\sВЛКСМ[^,;]*|член\sКП\sПольши[^,;]*|исключен\sиз\sВКП\(б\)[^,;]*|член\sКП\sГермании\,\sчлен\sВКП\(б\)|искл\.\sиз\sВКП\(б\)[^,;]*|бывший\sчлен\sВКП\(б\)[^,;]*|кандидат\sв\sчлены\sВКП\(б\)[^,;]*|член\sКП\sГермании|бывший\sчлен\sБунда|член\sКП\sАвстрии|член\sкомпартии\sПольши|член\sКП\sИрана|член\sКПГ|исключен\sиз\sкандидатов\sв\sчлены\sВКП\(б\)[^,;]|б\/п\s\(бывший\sчлен\sпартии\sэсеров\)|член\sВКП\(б\)\s\(бывший\sчлен\sБунда\,\sпартии\sэсеров\))[.,;]/g;
+var SHOT_RE = /[;,.]\sРассстреляна?\s([^\s]+)/g;
+var BURIED_RE = /[;,.]\sМесто\sзахоронения\:\s(.+)/g;
+var ADDRESS_RE = /.\sАдрес\:\s([^;]+)/g;
 
 // function person(data) {
 //   var split = data.split(/,|Расстрелян\s|Место\sзахоронения\:\s/);
@@ -97,44 +120,178 @@ fs.readFile(path.join(__dirname, '../data/data.csv'), {
 //     data: data
 //   };
 // };
+//
+function clean(str) {
+  str = str.replace(NAT_RE, ';$1;');
+  str = str.replace(PARTY_RE, ';$1;');
+  str = str.replace(SHOT_RE, ';$1;');
 
+  console.log(str);
 
-// var rows = [];
-// fs.readdir(path.join(__dirname, '../data/json/'), function(err, files) {
-//   if (err) throw err;
+  return str;
+}
 
-//   files.forEach(function(file, index, arr) {
-//     fs.readFile(path.join(__dirname, '../data/json/' +
-//       file), {
-//       encoding: 'utf-8'
-//     }, function(err, contents) {
-//       var json = JSON.parse(contents);
-//       rows = rows.concat(
-//         json.filter(function(item) {
-//           //console.log(item)
-//           return item.children[0].children;
-//         })
-//         .map(function(item) {
-//           // console.log(
-//           //   person(
-//           //     [item.children[0].children[0].text,
-//           //       item.children[0].text
-//           //     ].join('')
-//           //   ));
-//           return [item.children[0].children[0].text,
-//             item.children[0].text
-//           ].join(';');
-//         }));
+function files2text(callback) {
+  var rows = [];
+  fs.readdir(path.join(__dirname, '../data/json/'), function(err, files) {
+    if (err) throw err;
 
-//       if (index === arr.length - 1) {
-//         fs.writeFile(path.join(__dirname, '../data/data.txt'), rows.join('\n'), function(err) {
-//           if (err) {
-//             console.log(err);
-//           } else {
-//             console.log("The file was saved!");
-//           }
-//         });
-//       }
-//     });
-//   });
-// });
+    files.forEach(function(file, index, arr) {
+      fs.readFile(path.join(__dirname, '../data/json/' + file), {
+        encoding: 'utf-8'
+      }, function(err, contents) {
+        var json = JSON.parse(contents);
+        rows = rows.concat(
+          json.filter(function(item) {
+            //console.log(item)
+            return item.children[0].children;
+          })
+          .map(function(item) {
+            // console.log(
+            //   person(
+            //     [item.children[0].children[0].text,
+            //       item.children[0].text
+            //     ].join('')
+            //   ));
+            return item.children[0].children[0].text + ';' +
+              clean(item.children[0].text);
+          }));
+
+        if (index === arr.length + 1) {
+          fs.writeFile(path.join(__dirname, '../data/data.txt'), rows.join('\n'), function(err) {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log("The file was saved!");
+              callback(rows.join('\n'));
+            }
+          });
+        }
+      });
+    });
+  });
+}
+
+function getHouseNumber(node) {
+  var tr = node.parentNode.parentNode;
+  var houseNumberNode = tr.querySelector('h4');
+
+  while (tr && !houseNumberNode) {
+    if (tr.querySelector) {
+      houseNumberNode = tr.querySelector('h4');
+      tr = tr.previousSibling;
+    } else {
+      tr = null;
+    }
+  }
+  return houseNumberNode ? houseNumberNode.textContent : '???';
+}
+
+var __errors = [];
+
+function parse() {
+  var rows = [];
+  fs.readdir(path.join(__dirname, '../data/html/'), function(err, files) {
+    if (err) throw err;
+    var __left = files.length;
+
+    files.forEach(function(file, index, arr) {
+      //if (index === 0)
+      fs.readFile(path.join(__dirname, '../data/html/' + file), {
+        encoding: 'utf-8'
+      }, function(err, contents) {
+
+        jsdom.env(
+          contents,
+          function(errors, window) {
+
+            var data = [].map.call(window.document.body.querySelectorAll('p.street'),
+              function(s, lineNumber) {
+                var modernName = s.textContent;
+                var persons = [].map.call(
+                  s.nextSibling.nextSibling.querySelectorAll('p.pers'),
+                  function(row) {
+                    var name = row.querySelector('b').innerHTML;
+                    var data = row.innerHTML.split('</b>, ')[1];
+                    var houseNumber = getHouseNumber(row);
+
+                    // if (!data) {
+                    //   __errors.push(file + ' : ' + row.innerHTML);
+                    //   return null;
+                    // }
+
+                    data = data.replace(/род\.\s([^,]+),/, '$1;')
+                      .replace(NAT_RE, ';$1;')
+                      .replace(SHOT_RE, ';$1;')
+                      .replace(BURIED_RE, ';$1')
+                      .replace(ADDRESS_RE, ';$1')
+                      .replace(PARTY_RE, ';$1;');
+
+                    var line = data.split(';');
+
+                    //try {
+                    return {
+                      name: name,
+                      birthdate: line[0].trim(),
+                      birthplace: line[1].trim(),
+                      nationality: line[2].trim(),
+                      party: line[3].trim(),
+                      occupation: line[4].trim(),
+                      address: line[5].trim(),
+                      modern_address: {
+                        street: modernName,
+                        house: houseNumber
+                      },
+                      executed: line[6],
+                      buried: line[7]
+                    };
+                    //console.log(person);
+                    // } catch (e) {
+                    //   __errors.push(file + ' : ' + name + ' ' + line);
+                    //   return null;
+                    // }
+
+                    return {
+                      name: name
+                    };
+                  });
+
+                //console.log(persons);
+
+                return {
+                  name: s.textContent,
+                  people: persons
+                };
+              });
+
+            rows.push(data);
+
+            if (--__left === 0) {
+              fs.writeFile(path.join(__dirname, '../data/streets.json'), JSON.stringify(rows, null, 2),
+                function(err) {
+                  if (err) {
+                    console.log(err);
+                  } else {
+                    console.log("The file was saved!");
+                  }
+                });
+            }
+
+          });
+
+        // if (index === arr.length + 1) {
+        //   fs.writeFile(path.join(__dirname, '../data/data.txt'), rows.join('\n'), function(err) {
+        //     if (err) {
+        //       console.log(err);
+        //     } else {
+        //       console.log("The file was saved!");
+        //       callback(rows.join('\n'));
+        //     }
+        //   });
+        // }
+      });
+    });
+  });
+}
+
+//files2text();

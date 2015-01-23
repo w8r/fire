@@ -11,7 +11,7 @@ encode:
 
 json:
 	mkdir -p data/json/
-	for f in data/html/*.html; do echo $$f && pup -f $$f "table td:nth-child(2) json{}" --charset utf-8 > $$f.json; done
+	for f in data/html/*.html; do echo $$f && pup -f $$f "p.pers json{}" --charset utf-8 > $$f.json; done
 	mv data/html/*.json data/json/
 	for i in data/json/*.json ; do echo "$${i/.html.json/.json}" && mv "$$i" "$${i/.html.json/.json}" ; done
 
